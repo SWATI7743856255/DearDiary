@@ -15,13 +15,13 @@ function AllNotes() {
  
 
   useEffect(() => {
-    if (localStorage.getItem('token')) {
-      fetchNote();
-       // eslint-disable-next-line
-    } else {
+    const token = localStorage.getItem('token');
+    if (!token) {
       navigate("/Login");
+    } else {
+      fetchNote();
     }
-  }, []);
+  }, [navigate, fetchNote]);
 
 
   const ref = useRef(null);
