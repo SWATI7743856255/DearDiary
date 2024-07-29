@@ -14,17 +14,18 @@ router.post('/createuser', [
   body('email', 'Enter a valid email').isEmail(),
   body('password', 'Password must be at least 5 characters long').isLength({ min: 5 }),
 ], async (req, res) => {
+  let success=false;
   // Check for validation errors
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ success,errors: errors.array() });
   }
 
   try {
     // Check if user already exists
     const existingUser = await User.findOne({ email: req.body.email });
     if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
+      return res.status(400).json({ success,error: 'User already exists' });
     }
 
     // Generate a salt and hash the password
@@ -48,7 +49,8 @@ router.post('/createuser', [
     const authToken = jwt.sign(data, jwt_secretKey);
 
     // Send response
-    res.json({ authToken });
+    success=true;
+    res.json({success,authToken });
 
   } catch (error) {
     console.error(error.message);
@@ -61,6 +63,7 @@ router.post('/login', [
   body('email', 'Enter a valid email').isEmail(),
   body('password', 'Password can not be blank').exists()
 ], async (req, res) => {
+  let success=false;
   // Check for validation errors
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -72,13 +75,15 @@ router.post('/login', [
   try {
     let exsistinguser= await User.findOne({email}); // find the email if it is there in database first.
     if(!exsistinguser){
+      success=false;
       return res.status(400).json({ error: 'Invalid email or password' });
     }
     // if email exsists go for password comparing with stored hashed password.
     const passwordcompare=await bcrypt.compare(password,exsistinguser.password)
     if(!passwordcompare)
       {
-        return res.status(400).json({ error: 'Invalid email or password' });
+        success=false;
+        return res.status(400).json({ success,error: 'Invalid email or password' });
       }
 
     // Generate JWT token
@@ -89,9 +94,10 @@ router.post('/login', [
     };
 
     const authToken = jwt.sign(data, jwt_secretKey);
+    const success=true;
 
     // Send response
-    res.json({ authToken });
+    res.json({ success,authToken });
 
   } catch (error) {
     console.error(error.message);
